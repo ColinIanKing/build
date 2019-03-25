@@ -69,9 +69,11 @@ if [ -f $PACKAGES ]; then
 
     print_green "Unpacking the packages archive"
     tar -xf $PACKAGES
+else
+    cd /tmp
 fi
 
-print_green "Update list of modules to inclue in intramfs"
+print_green "Update list of modules to include in initramfs"
 cat <<EOF >> /etc/initramfs-tools/modules
 qcom_smd_regulator
 smd_rpm
@@ -86,8 +88,6 @@ qcom_spmi_pmic
 pinctrl_spmi_gpio
 nvmem_qfprom
 EOF
-
-ps aux | grep apt
 
 # The while [] loops avoid GPG issues
 rm nonexistant-file &> /dev/null # Set $? to 1
@@ -111,7 +111,7 @@ rm nonexistant-file &> /dev/null # Set $? to 1
 while [ $? -ne 0 ]; do
     sudo DEBIAN_FRONTEND=noninteractive apt-get install -y                         \
 	 -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" \
-	 grub2-common
+	 grub-efi-arm64
 done
 
 rm nonexistant-file &> /dev/null # Set $? to 1
@@ -130,7 +130,7 @@ fi
 
 # Copy grub.cfg shim to the EFI BOOT directory
 #  Searches local media for the grub.cfg
-cp scripts/grub-shim.cfg $EFIBOOTDIR/grub.cfg
+cp grub-shim.cfg $EFIBOOTDIR/grub.cfg
 
 # Replace string "[REPLACE_UUID]" with the filesystem UUID
 UUID=$(lsblk -o UUID /dev/sda2 | sed '/UUID/d')
